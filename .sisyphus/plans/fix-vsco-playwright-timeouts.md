@@ -183,7 +183,7 @@ Wave 2 (after Wave 1)
     Evidence: .sisyphus/evidence/fix-timeouts-artifacts-listing.txt
   ```
 
-- [ ] 4. Audit other `networkidle` waits and switch to selector readiness where appropriate
+- [x] 4. Audit other `networkidle` waits and switch to selector readiness where appropriate
 
   **What to do**:
   - Inspect and update:
@@ -194,7 +194,7 @@ Wave 2 (after Wave 1)
   **Acceptance Criteria**:
   - [ ] No `waitUntil: 'networkidle'` remains in VSCO scraping paths unless justified.
 
-- [ ] 5. End-to-end verification on the reported profile
+- [x] 5. End-to-end verification on the reported profile
 
   **What to do**:
   - Run:
