@@ -32,6 +32,22 @@ export async function ensureBackupRoot(backupRoot: string): Promise<void> {
 }
 
 /**
+ * Read manifest from disk without initialization
+ * Throws error if manifest is missing or invalid
+ */
+export async function readManifest(backupRoot: string): Promise<BackupManifest> {
+  const manifestPath = getManifestPath(backupRoot);
+  const content = await readFile(manifestPath, 'utf-8');
+  const parsed = JSON.parse(content);
+
+  if (!isValidBackupManifest(parsed)) {
+    throw new Error('Invalid manifest structure');
+  }
+
+  return parsed;
+}
+
+/**
  * Load manifest from disk, or initialize a new one if missing
  */
 export async function loadManifest(
