@@ -1,0 +1,26 @@
+{
+  "name": "vsco-profile-backup-cli",
+  "version": "0.1.0",
+  "description": "CLI tool to backup VSCO profiles",
+  "type": "module",
+  "main": "dist/cli/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/cli/index.js"
+  },
+  "keywords": [
+    "vsco",
+    "backup",
+    "cli"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^12.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.2.3",
+    "typescript": "^5.3.3"
+  }
+}
