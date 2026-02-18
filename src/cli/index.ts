@@ -70,6 +70,7 @@ function run(): void {
     .option('--max-scrolls <number>', 'Maximum scroll cycles (default: 50)', parseInt)
     .option('--max-items <number>', 'Maximum items to discover (default: no limit)', parseInt)
     .option('--timeout-ms <number>', 'Navigation and selector timeout in milliseconds (default: 90000, max: 300000)', (value: string) => parseAndValidateTimeout(value))
+    .option('--headful', 'Run browser in headful mode (default: headless)')
     .action(async (profileUrl: string, options: CliOptions) => {
       try {
         const { username, normalized } = parseAndValidateUrl(profileUrl);
@@ -91,9 +92,23 @@ function run(): void {
           if (options.timeoutMs) {
             console.log(`  Timeout: ${options.timeoutMs}ms`);
           }
+          if (options.maxScrolls) {
+            console.log(`  Max scrolls: ${options.maxScrolls}`);
+          }
+          if (options.maxItems) {
+            console.log(`  Max items: ${options.maxItems}`);
+          }
+          if (options.headful) {
+            console.log(`  Headful mode: enabled`);
+          }
         }
 
-        await orchestrateBackup(username, options.outRoot, { timeoutMs: options.timeoutMs });
+        await orchestrateBackup(username, options.outRoot, {
+          timeoutMs: options.timeoutMs,
+          maxScrollCycles: options.maxScrolls,
+          maxItems: options.maxItems,
+          headless: !options.headful
+        });
 
         process.exit(0);
       } catch (err) {

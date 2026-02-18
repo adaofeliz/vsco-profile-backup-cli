@@ -46,6 +46,9 @@ function mapBlogPost(post: DiscoveryBlogPost): ManifestBlogPost {
 
 export interface BackupOptions {
   timeoutMs?: number;
+  maxScrollCycles?: number;
+  maxItems?: number;
+  headless?: boolean;
 }
 
 export async function orchestrateBackup(username: string, outRoot: string, options?: BackupOptions): Promise<void> {
@@ -61,6 +64,9 @@ export async function orchestrateBackup(username: string, outRoot: string, optio
   try {
     const discovery = await discoverProfile(username, {
       navigationTimeout: options?.timeoutMs,
+      maxScrollCycles: options?.maxScrollCycles,
+      maxItems: options?.maxItems,
+      headless: options?.headless,
       backupRoot,
       runId
     });

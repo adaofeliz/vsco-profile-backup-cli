@@ -9,6 +9,7 @@ export interface CliOptions {
   maxScrolls?: number;
   maxItems?: number;
   timeoutMs?: number;
+  headful?: boolean;
 }
 
 export interface CliResult {
