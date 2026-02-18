@@ -1,0 +1,165 @@
+:root {
+  --bg-color: #0a0a0a;
+  --text-color: #f0f0f0;
+  --accent-color: #ff3e00;
+  --grid-gap: 2rem;
+  --font-main: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-mono: 'Courier New', Courier, monospace;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  font-family: var(--font-main);
+  line-height: 1.5;
+  padding: 2rem;
+}
+
+header {
+  margin-bottom: 4rem;
+  border-bottom: 1px solid #333;
+  padding-bottom: 2rem;
+}
+
+h1 {
+  font-size: 4rem;
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+}
+
+h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  border-left: 4px solid var(--accent-color);
+  padding-left: 1rem;
+}
+
+.meta {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: #888;
+  margin-top: 1rem;
+}
+
+a {
+  color: var(--text-color);
+  text-decoration: none;
+  border-bottom: 1px solid var(--accent-color);
+  transition: all 0.2s ease;
+}
+
+a:hover {
+  background-color: var(--accent-color);
+  color: var(--bg-color);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--grid-gap);
+}
+
+.photo-card {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 1;
+  background: #1a1a1a;
+}
+
+.photo-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+  display: block;
+}
+
+.photo-card:hover img {
+  transform: scale(1.05);
+}
+
+.photo-info {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 1rem;
+  background: linear-gradient(transparent, rgba(0,0,0,0.8));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.photo-card:hover .photo-info {
+  opacity: 1;
+}
+
+.gallery-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+  margin-bottom: 4rem;
+}
+
+.gallery-item {
+  padding: 1.5rem;
+  border: 1px solid #333;
+  transition: border-color 0.2s ease;
+}
+
+.gallery-item:hover {
+  border-color: var(--accent-color);
+}
+
+.gallery-title {
+  font-weight: bold;
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+  display: block;
+  border-bottom: none;
+}
+
+.blog-post {
+  max-width: 800px;
+  margin: 0 auto 4rem auto;
+}
+
+.blog-header {
+  margin-bottom: 2rem;
+}
+
+.blog-content {
+  font-size: 1.1rem;
+  line-height: 1.8;
+}
+
+.blog-content img {
+  max-width: 100%;
+  height: auto;
+  margin: 2rem 0;
+}
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 2rem;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+}
+
+footer {
+  margin-top: 6rem;
+  padding-top: 2rem;
+  border-top: 1px solid #333;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: #666;
+  text-align: right;
+}
