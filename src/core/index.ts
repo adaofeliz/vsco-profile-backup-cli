@@ -5,13 +5,22 @@ import { loadManifest, saveManifestAtomic, recordBackupRunStart, recordBackupRun
 import { detectIncrementalPhotos } from './incremental.js';
 import { downloadAssets } from '../download/downloader.js';
 import { generateSite } from '../site/index.js';
+import { normalizeRemoteUrl } from '../utils/url.js';
 import type { Photo as ManifestPhoto, Gallery as ManifestGallery, BlogPost as ManifestBlogPost } from '../manifest/types.js';
 import type { Photo as DiscoveryPhoto, Gallery as DiscoveryGallery, BlogPost as DiscoveryBlogPost } from '../vsco/types.js';
 
-function mapPhoto(photo: DiscoveryPhoto): ManifestPhoto {
+function mapPhoto(photo: DiscoveryPhoto): ManifestPhoto | null {
+  const logger = getLogger();
+  const normalized = normalizeRemoteUrl(photo.imageUrl || '');
+  
+  if (!normalized.ok) {
+    logger.warn(`Skipping photo ${photo.id} during mapping: ${normalized.reason}`);
+    return null;
+  }
+
   return {
     id: photo.id,
-    url_highres: photo.imageUrl || '',
+    url_highres: normalized.url,
     caption: photo.caption,
     downloaded_at: new Date().toISOString()
   };
@@ -59,7 +68,9 @@ export async function orchestrateBackup(username: string, outRoot: string, optio
       throw new Error(discovery.errorMessage);
     }
 
-    const manifestPhotos = discovery.photos.map(mapPhoto);
+    const manifestPhotos = discovery.photos
+      .map(mapPhoto)
+      .filter((photo): photo is ManifestPhoto => photo !== null);
     const incremental = await detectIncrementalPhotos(backupRoot, manifestPhotos, manifest);
     
     const itemsToDownload = [...incremental.newItems, ...incremental.missingItems, ...incremental.invalidItems];

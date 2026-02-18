@@ -2,6 +2,7 @@ import { chromium, Browser, Page, Response } from 'playwright';
 import { getLogger } from '../utils/logger.js';
 import { retry } from '../utils/retry.js';
 import { captureArtifacts } from '../utils/artifacts.js';
+import { normalizeVscoAssetUrl } from './url.js';
 import {
   ProfileDiscoveryResult,
   DiscoveryOptions,
@@ -419,7 +420,7 @@ async function extractPhotos(page: Page, networkData: NetworkData): Promise<Phot
           const img = el.querySelector('img');
           if (img) {
             thumbnailUrl = img.src || '';
-            imageUrl = img.src?.replace(/\?.*$/, '') || '';
+            imageUrl = img.src || '';
           }
         } else if (el.tagName === 'IMG') {
           const img = el as HTMLImageElement;
@@ -433,10 +434,19 @@ async function extractPhotos(page: Page, networkData: NetworkData): Promise<Phot
       .filter((photo) => photo.id);
   });
 
+  const logger = getLogger();
   domPhotos.forEach((photo) => {
     if (!seenIds.has(photo.id)) {
+      const normalized = normalizeVscoAssetUrl(photo.imageUrl);
+      if (!normalized.ok) {
+        logger.debug(`Skipping photo ${photo.id}: ${normalized.reason} (input: ${normalized.input})`);
+        return;
+      }
       seenIds.add(photo.id);
-      photos.push(photo);
+      photos.push({
+        ...photo,
+        imageUrl: normalized.url,
+      });
     }
   });
 
@@ -445,15 +455,24 @@ async function extractPhotos(page: Page, networkData: NetworkData): Promise<Phot
 
 function extractPhotosFromJson(data: any): Photo[] {
   const photos: Photo[] = [];
+  const logger = getLogger();
 
   function traverse(obj: any) {
     if (!obj || typeof obj !== 'object') return;
 
     if (obj.id && (obj.imageUrl || obj.permalink || obj.responsiveUrl)) {
+      const rawImageUrl = obj.imageUrl || obj.responsiveUrl;
+      const normalized = normalizeVscoAssetUrl(rawImageUrl);
+      
+      if (!normalized.ok) {
+        logger.debug(`Skipping photo ${obj.id} from JSON: ${normalized.reason} (input: ${normalized.input})`);
+        return;
+      }
+
       photos.push({
         id: obj.id,
         permalink: obj.permalink,
-        imageUrl: obj.imageUrl || obj.responsiveUrl,
+        imageUrl: normalized.url,
         thumbnailUrl: obj.thumbnailUrl || obj.imageUrl,
         uploadDate: obj.uploadDate || obj.captureDate,
         caption: obj.description || obj.caption,
