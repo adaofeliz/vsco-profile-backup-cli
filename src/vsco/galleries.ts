@@ -55,7 +55,7 @@ export async function scrapeGalleries(username: string): Promise<Gallery[]> {
     await page.goto(profileUrl, { waitUntil: 'networkidle' });
 
     // Extract gallery data
-    const rawGalleries = await extractGalleryData(page, username);
+    const rawGalleries = await extractGalleryData(page);
 
     // Convert to Gallery entities with stable slugs
     const galleries = convertToGalleries(rawGalleries);
@@ -76,7 +76,7 @@ export async function scrapeGalleries(username: string): Promise<Gallery[]> {
  * @param username - VSCO username
  * @returns Array of raw gallery data
  */
-async function extractGalleryData(page: Page, username: string): Promise<RawGalleryData[]> {
+async function extractGalleryData(page: Page): Promise<RawGalleryData[]> {
   // Wait for galleries to load
   // VSCO uses dynamic rendering, so we need to wait for content
   await page.waitForTimeout(2000);

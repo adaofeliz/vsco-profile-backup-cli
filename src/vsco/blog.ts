@@ -15,35 +15,23 @@ import { createHash } from 'crypto';
  * @returns Array of normalized blog posts
  */
 export async function scrapeBlogPosts(page: Page, username: string): Promise<BlogPost[]> {
-  // Navigate to the user's blog/journal page
-  // VSCO typically uses /username/journal or similar
   const blogUrl = `https://vsco.co/${username}/journal`;
   
   try {
     await page.goto(blogUrl, { waitUntil: 'networkidle', timeout: 30000 });
   } catch (error) {
-    // If journal page doesn't exist or times out, return empty array
     console.warn(`No blog/journal found for user ${username}`);
     return [];
   }
 
-  // Wait for journal entries to load
-  // Adjust selectors based on actual VSCO DOM structure
   await page.waitForSelector('article, .journal-entry, [data-journal-entry]', { 
     timeout: 10000 
-  }).catch(() => {
-    // No journal entries found
-    return null;
-  });
+  }).catch(() => null);
 
-  // Extract all blog post entries
   const blogPostData = await page.evaluate(() => {
-    // Find all blog post/journal entry elements
-    // This is a heuristic - adjust based on actual VSCO structure
     const entries = Array.from(document.querySelectorAll('article, .journal-entry, [data-journal-entry]'));
     
     if (entries.length === 0) {
-      // Try alternative structure - look for links to journal posts
       const links = Array.from(document.querySelectorAll('a[href*="/journal/"]'));
       return links.map((link) => {
         const url = (link as HTMLAnchorElement).href;
@@ -56,11 +44,9 @@ export async function scrapeBlogPosts(page: Page, username: string): Promise<Blo
     }
 
     return entries.map((entry) => {
-      // Extract post URL/ID
       let postUrl = '';
       let postId = '';
       
-      // Look for link to full post
       const link = entry.querySelector('a[href*="/journal/"]') as HTMLAnchorElement;
       if (link) {
         postUrl = link.href;
@@ -68,14 +54,12 @@ export async function scrapeBlogPosts(page: Page, username: string): Promise<Blo
         postId = match ? match[1] : '';
       }
 
-      // Extract title
       let title = '';
       const titleEl = entry.querySelector('h1, h2, h3, .title, [class*="title"]');
       if (titleEl) {
         title = titleEl.textContent?.trim() || '';
       }
 
-      // Extract date if visible
       let dateStr = '';
       const dateEl = entry.querySelector('time, .date, [datetime]');
       if (dateEl) {
@@ -96,64 +80,50 @@ export async function scrapeBlogPosts(page: Page, username: string): Promise<Blo
     });
   });
 
-  // Now visit each blog post to extract full content
   const blogPosts: BlogPost[] = [];
   const slugMap = new Map<string, string>();
 
   for (const postData of blogPostData) {
     if (!postData.url || !postData.id) {
-      continue; // Skip invalid entries
+      continue;
     }
 
     try {
-      // Navigate to the full post
       await page.goto(postData.url, { waitUntil: 'networkidle', timeout: 30000 });
 
-      // Wait for post content to load
       await page.waitForSelector('article, .journal-post, [role="article"]', { 
         timeout: 10000 
       }).catch(() => null);
 
-      // Extract full post data
       const postContent = await page.evaluate(() => {
-        // Find the main post content container
         const article = document.querySelector('article, .journal-post, [role="article"]');
         if (!article) {
           return null;
         }
 
-        // Extract title
         let title = '';
         const titleEl = article.querySelector('h1, h2, [class*="title"]');
         if (titleEl) {
           title = titleEl.textContent?.trim() || '';
         }
 
-        // Extract publication date
         let publishedAt = '';
         const timeEl = article.querySelector('time[datetime]');
         if (timeEl) {
           publishedAt = timeEl.getAttribute('datetime') || '';
         } else {
-          // Fallback: look for date text
           const dateEl = article.querySelector('.date, [class*="date"]');
           if (dateEl) {
             publishedAt = dateEl.textContent?.trim() || '';
           }
         }
 
-        // Extract content HTML
-        // Remove scripts, normalize structure
         const contentEl = article.querySelector('.content, [class*="content"], .body, [class*="body"]') || article;
         const clonedContent = contentEl.cloneNode(true) as HTMLElement;
 
-        // Remove script tags
         clonedContent.querySelectorAll('script, noscript').forEach(el => el.remove());
-
-        // Remove external stylesheets and links
         clonedContent.querySelectorAll('link[rel="stylesheet"]').forEach(el => el.remove());
 
-        // Remove inline event handlers
         clonedContent.querySelectorAll('*').forEach(el => {
           const attrs = Array.from(el.attributes);
           attrs.forEach(attr => {
@@ -162,8 +132,6 @@ export async function scrapeBlogPosts(page: Page, username: string): Promise<Blo
             }
           });
         });
-
-        // Extract image URLs for normalization
         const images = Array.from(clonedContent.querySelectorAll('img'));
         const imageUrls = images.map(img => img.src);
 
@@ -180,21 +148,18 @@ export async function scrapeBlogPosts(page: Page, username: string): Promise<Blo
         continue;
       }
 
-      // Normalize content HTML
       const normalizedContent = normalizeContentHtml(
         postContent.contentHtml,
         postContent.imageUrls,
         postData.id
       );
 
-      // Normalize published_at to ISO 8601
-      const publishedAt = normalizeDate(postContent.publishedAt || postData.dateStr);
-
-      // Generate collision-proof slug
-      const title = postContent.title || postData.title || `Post ${postData.id}`;
+      const dateStr = 'dateStr' in postData && typeof postData.dateStr === 'string' ? postData.dateStr : '';
+      const postTitle = 'title' in postData && typeof postData.title === 'string' ? postData.title : '';
+      
+      const publishedAt = normalizeDate(postContent.publishedAt || dateStr);
+      const title = postContent.title || postTitle || `Post ${postData.id}`;
       const slug = generateSlug(title, postData.id, slugMap);
-
-      // Create stable ID (use VSCO ID or hash of URL)
       const stableId = postData.id || generateIdFromUrl(postData.url);
 
       blogPosts.push({
@@ -228,28 +193,19 @@ export async function scrapeBlogPosts(page: Page, username: string): Promise<Blo
 function normalizeContentHtml(html: string, imageUrls: string[], postId: string): string {
   let normalized = html;
 
-  // Convert each image URL to local path
-  imageUrls.forEach((remoteUrl, index) => {
+  imageUrls.forEach((remoteUrl) => {
     if (!remoteUrl) return;
 
-    // Generate deterministic local path
-    // Use hash of URL for stable filename
     const urlHash = createHash('sha256').update(remoteUrl).digest('hex').substring(0, 12);
     const ext = getExtensionFromUrl(remoteUrl);
     const localPath = `../.vsco-backup/media/blog-${postId}-img-${urlHash}${ext}`;
 
-    // Replace all occurrences of this URL
     normalized = normalized.split(remoteUrl).join(localPath);
   });
 
-  // Additional cleanup: remove any remaining script references
   normalized = normalized.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
-
-  // Remove inline event handlers from string (backup to browser-side removal)
   normalized = normalized.replace(/\s+on\w+="[^"]*"/gi, '');
   normalized = normalized.replace(/\s+on\w+='[^']*'/gi, '');
-
-  // Remove javascript: URLs
   normalized = normalized.replace(/href="javascript:[^"]*"/gi, 'href="#"');
   normalized = normalized.replace(/src="javascript:[^"]*"/gi, '');
 
@@ -266,7 +222,7 @@ function getExtensionFromUrl(url: string): string {
     const urlObj = new URL(url);
     const pathname = urlObj.pathname;
     const match = pathname.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i);
-    return match ? `.${match[1].toLowerCase()}` : '.jpg'; // Default to .jpg
+    return match ? `.${match[1].toLowerCase()}` : '.jpg';
   } catch {
     return '.jpg';
   }
@@ -282,20 +238,16 @@ function normalizeDate(dateStr: string): string {
     return new Date().toISOString();
   }
 
-  // If already ISO 8601, return as-is
   if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(dateStr)) {
     return dateStr;
   }
 
-  // Try to parse and convert
   try {
     const date = new Date(dateStr);
     if (!isNaN(date.getTime())) {
       return date.toISOString();
     }
-  } catch {
-    // Fallback: use current date
-  }
+  } catch {}
 
   return new Date().toISOString();
 }
@@ -319,17 +271,11 @@ export function extractAssetUrls(posts: BlogPost[]): Map<string, string> {
   const assetMap = new Map<string, string>();
 
   for (const post of posts) {
-    // Parse content_html to find local paths and reverse-engineer original URLs
-    // This is a heuristic - in practice, we'd track during normalization
     const imgMatches = post.content_html.matchAll(/src="([^"]+)"/g);
     
     for (const match of imgMatches) {
       const localPath = match[1];
-      // If it's a local path, we already normalized it
       if (localPath.startsWith('../.vsco-backup/media/')) {
-        // Extract the hash from the path to lookup original URL
-        // In real implementation, we'd maintain a mapping during normalization
-        // For now, store the local path
         assetMap.set(localPath, localPath);
       }
     }
