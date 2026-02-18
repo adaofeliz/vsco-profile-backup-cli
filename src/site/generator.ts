@@ -175,8 +175,11 @@ export class SiteGenerator {
         const filename = this.getMediaFilename(photo.id);
         const src = `${relativePrefix}${OUTPUT_LAYOUT.MEDIA_DIR}/${filename}`;
         return `
-          <div class="photo-item">
-            <img src="${src}" alt="${photo.caption || ''}" loading="lazy">
+          <div class="photo-card">
+            <a href="${src}" target="_blank">
+              <img src="${src}" alt="${photo.caption || ''}" loading="lazy">
+              ${photo.caption ? `<div class="photo-info"><p>${photo.caption}</p></div>` : ''}
+            </a>
           </div>
         `;
       })
@@ -194,10 +197,10 @@ export class SiteGenerator {
         const href = `${relativePrefix}${OUTPUT_LAYOUT.GALLERIES_DIR}/${slug}/${OUTPUT_LAYOUT.INDEX_FILE}`;
         return `
           <div class="gallery-item">
-            <a href="${href}">
+            <a href="${href}" class="gallery-title">
               <h3>${gallery.name}</h3>
-              <p>${gallery.photo_ids.length} photos</p>
             </a>
+            <p>${gallery.photo_ids.length} photos</p>
           </div>
         `;
       })
@@ -211,11 +214,11 @@ export class SiteGenerator {
       .map((post) => {
         const href = `${relativePrefix}${OUTPUT_LAYOUT.BLOG_DIR}/${post.slug}/${OUTPUT_LAYOUT.INDEX_FILE}`;
         return `
-          <div class="blog-item">
-            <a href="${href}">
+          <div class="gallery-item">
+            <a href="${href}" class="gallery-title">
               <h3>${post.title}</h3>
-              <p>${new Date(post.published_at).toLocaleDateString()}</p>
             </a>
+            <p>${new Date(post.published_at).toLocaleDateString()}</p>
           </div>
         `;
       })

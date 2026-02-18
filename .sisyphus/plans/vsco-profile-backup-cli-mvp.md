@@ -845,7 +845,7 @@ Wave 4 — Robustness + end-to-end QA hardening
     Evidence: .sisyphus/evidence/task-18-queue-zero.txt
   ```
 
-- [ ] 19. Static site navigation + “profile home” UX
+- [x] 19. Static site navigation + “profile home” UX
 
   **What to do**:
   - Ensure index page shows:

@@ -11,24 +11,29 @@
         <h1>{{username}}</h1>
         <p>{{bio}}</p>
         <div class="meta">Last backup: {{lastBackup}}</div>
+        <nav style="margin-top: 1rem;">
+            <a href="#photos">Photos</a> |
+            <a href="#galleries">Galleries</a> |
+            <a href="#journal">Journal</a>
+        </nav>
     </header>
 
     <main>
-        <section>
+        <section id="photos">
             <h2>Photos</h2>
             <div class="grid">
                 {{photoGrid}}
             </div>
         </section>
 
-        <section style="margin-top: 4rem;">
+        <section id="galleries" style="margin-top: 4rem;">
             <h2>Galleries</h2>
             <div class="gallery-list">
                 {{galleryList}}
             </div>
         </section>
 
-        <section style="margin-top: 4rem;">
+        <section id="journal" style="margin-top: 4rem;">
             <h2>Journal</h2>
             <div class="gallery-list">
                 {{blogList}}

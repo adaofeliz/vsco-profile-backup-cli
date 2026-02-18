@@ -2,6 +2,7 @@ import { Command } from 'commander';
 import { join } from 'path';
 import type { CliOptions, CliResult } from './types.js';
 import { orchestrateBackup } from '../core/index.js';
+import { getLogger } from '../utils/logger.js';
 
 function parseAndValidateUrl(urlString: string): { username: string; normalized: string } {
   try {
@@ -52,6 +53,8 @@ function run(): void {
           profileUrlNormalized: normalized,
           backupRoot,
         };
+
+        const logger = getLogger({ verbose: options.verbose });
 
         if (options.verbose) {
           console.log('Parsed CLI arguments:');
