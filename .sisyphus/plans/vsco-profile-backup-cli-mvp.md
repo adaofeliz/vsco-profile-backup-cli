@@ -913,7 +913,7 @@ Wave 4 — Robustness + end-to-end QA hardening
     Evidence: .sisyphus/evidence/task-20-robots-exit.txt
   ```
 
-- [ ] 21. Resume safety: per-item manifest updates + crash tolerance
+- [x] 21. Resume safety: per-item manifest updates + crash tolerance
 
   **What to do**:
   - Update manifest incrementally as items complete (or in small batches) so a crash leaves useful state.
@@ -946,7 +946,7 @@ Wave 4 — Robustness + end-to-end QA hardening
     Evidence: .sisyphus/evidence/task-21-resume.txt
   ```
 
-- [ ] 22. Crawl stopping rule + caps (anti-runaway)
+- [x] 22. Crawl stopping rule + caps (anti-runaway)
 
   **What to do**:
   - Implement a default stopping rule:
@@ -978,7 +978,7 @@ Wave 4 — Robustness + end-to-end QA hardening
     Evidence: .sisyphus/evidence/task-22-stopping.json
   ```
 
-- [ ] 23. Deterministic filenames + collision tests
+- [x] 23. Deterministic filenames + collision tests
 
   **What to do**:
   - Add safeguards:
@@ -1009,7 +1009,7 @@ Wave 4 — Robustness + end-to-end QA hardening
     Evidence: .sisyphus/evidence/task-23-path-unique.txt
   ```
 
-- [ ] 24. Offline open verification (file://) + screenshot evidence
+- [x] 24. Offline open verification (file://) + screenshot evidence
 
   **What to do**:
   - Use Playwright to open generated `file://.../index.html` and navigate.
@@ -1043,7 +1043,7 @@ Wave 4 — Robustness + end-to-end QA hardening
     Evidence: .sisyphus/evidence/task-24-offline-index.png
   ```
 
-- [ ] 25. End-to-end acceptance runbook + evidence consolidation
+- [x] 25. End-to-end acceptance runbook + evidence consolidation
 
   **What to do**:
   - Provide a single runbook command sequence for the executor to run on a clean machine:
@@ -1075,7 +1075,7 @@ Wave 4 — Robustness + end-to-end QA hardening
     Evidence: .sisyphus/evidence/task-25-runbook.txt
   ```
 
-- [ ] 26. Documentation: minimal README usage + output structure
+- [x] 26. Documentation: minimal README usage + output structure
 
   **What to do**:
   - Add minimal README section:
