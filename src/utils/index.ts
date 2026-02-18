@@ -32,6 +32,17 @@ export {
 export { fetchRobotsTxt, isCrawlAllowed, checkRobotsPolicy } from './robots.js';
 export type { RobotsCheckResult } from './robots.js';
 
+export {
+  VSCOBackupError,
+  InvalidInputError,
+  RobotsDisallowedError,
+  ProfileNotFoundError,
+  ScrapeError,
+  DownloadError,
+  getExitCode,
+  handleError,
+} from './errors.js';
+
 export async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
