@@ -190,7 +190,7 @@ Wave 4 — Robustness + end-to-end QA hardening
     Evidence: .sisyphus/evidence/task-1-noargs-error.txt
   ```
 
-- [ ] 2. CLI argument parsing + validation contract
+- [x] 2. CLI argument parsing + validation contract
 
   **What to do**:
   - Define CLI interface:
