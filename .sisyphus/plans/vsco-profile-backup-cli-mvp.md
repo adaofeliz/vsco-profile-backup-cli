@@ -748,7 +748,7 @@ Wave 4 — Robustness + end-to-end QA hardening
     Evidence: .sisyphus/evidence/task-15-partial-resume.txt
   ```
 
-- [ ] 16. Incremental detection rules (new vs missing vs invalid)
+- [x] 16. Incremental detection rules (new vs missing vs invalid)
 
   **What to do**:
   - Define incremental classification:
@@ -780,7 +780,7 @@ Wave 4 — Robustness + end-to-end QA hardening
     Evidence: .sisyphus/evidence/task-16-rerun-incremental.txt
   ```
 
-- [ ] 17. Site generator: write index/gallery/blog pages from manifest
+- [x] 17. Site generator: write index/gallery/blog pages from manifest
 
   **What to do**:
   - Generate pages every run (idempotent) based on manifest content.
@@ -880,7 +880,7 @@ Wave 4 — Robustness + end-to-end QA hardening
     Evidence: .sisyphus/evidence/task-19-offline-nav.png
   ```
 
-- [ ] 20. Error taxonomy + exit codes
+- [x] 20. Error taxonomy + exit codes
 
   **What to do**:
   - Standardize error classes and exit codes:
