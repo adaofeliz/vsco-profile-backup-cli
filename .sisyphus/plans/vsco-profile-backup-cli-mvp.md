@@ -702,7 +702,7 @@ Wave 4 — Robustness + end-to-end QA hardening
     Evidence: .sisyphus/evidence/task-14-templates.txt
   ```
 
-- [ ] 15. Core orchestration: run pipeline + phase boundaries
+- [x] 15. Core orchestration: run pipeline + phase boundaries
 
   **What to do**:
   - Implement high-level runner:
@@ -815,7 +815,7 @@ Wave 4 — Robustness + end-to-end QA hardening
     Evidence: .sisyphus/evidence/task-17-pages.txt
   ```
 
-- [ ] 18. Download planning: build download queue from scraped entities
+- [x] 18. Download planning: build download queue from scraped entities
 
   **What to do**:
   - Convert scraped entities into a download queue of URLs → local paths.
