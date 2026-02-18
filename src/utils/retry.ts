@@ -51,6 +51,14 @@ function isTransientError(error: unknown): boolean {
     return false;
   }
 
+  // URL parse failures are deterministic (e.g., "Failed to parse URL from ...")
+  if (error instanceof Error) {
+    const msg = error.message.toLowerCase();
+    if (msg.includes('failed to parse url') || msg.includes('invalid url')) {
+      return false;
+    }
+  }
+
   // Default to transient for unknown errors
   return true;
 }

@@ -13,6 +13,7 @@ import { getLogger } from '../utils/logger.js';
 import { retry } from '../utils/retry.js';
 import { rateLimit } from '../utils/ratelimit.js';
 import { getMediaPath, generateMediaFilename } from '../utils/paths.js';
+import { normalizeRemoteUrl } from '../utils/url.js';
 
 export interface DownloadTask {
   /** URL to download */
@@ -98,6 +99,21 @@ async function downloadFile(task: DownloadTask): Promise<DownloadResult> {
   const filename = generateMediaFilename(mediaId, contentType);
   const localPath = getMediaPath(backupRoot, filename);
 
+  // Preflight: Normalize and validate URL
+  const normalizationResult = normalizeRemoteUrl(url);
+  if (!normalizationResult.ok) {
+    const errorMsg = `Invalid URL: ${normalizationResult.reason} (input: ${normalizationResult.input})`;
+    logger.error(`Failed to download ${filename}: ${errorMsg}`);
+    return {
+      task,
+      success: false,
+      error: errorMsg,
+      downloaded: false,
+    };
+  }
+
+  const normalizedUrl = normalizationResult.url;
+
   // Check if download is needed
   const validation = await needsDownload(localPath, expectedSize);
   if (!validation.needs) {
@@ -112,13 +128,13 @@ async function downloadFile(task: DownloadTask): Promise<DownloadResult> {
   }
 
   logger.debug(
-    `Downloading ${filename} from ${url} (reason: ${validation.reason})`
+    `Downloading ${filename} from ${normalizedUrl} (reason: ${validation.reason})`
   );
 
   try {
     // Download with retry wrapper
     const fileBuffer = await retry(async () => {
-      const response = await fetch(url);
+      const response = await fetch(normalizedUrl);
 
       if (!response.ok) {
         const error = new Error(`HTTP ${response.status}: ${response.statusText}`) as any;
