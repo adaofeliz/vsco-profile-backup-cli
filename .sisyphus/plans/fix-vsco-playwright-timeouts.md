@@ -90,7 +90,7 @@ Wave 2 (after Wave 1)
 
 ## TODOs
 
-- [ ] 1. Add `--timeout-ms` CLI flag and plumb into discovery
+- [x] 1. Add `--timeout-ms` CLI flag and plumb into discovery
 
   **What to do**:
   - Update `src/cli/types.ts` to include `timeoutMs?: number`.
@@ -122,7 +122,7 @@ Wave 2 (after Wave 1)
     Evidence: .sisyphus/evidence/fix-timeouts-timeoutms-invalid.txt
   ```
 
-- [ ] 2. Replace `networkidle` with DOM+selector readiness in discovery
+- [x] 2. Replace `networkidle` with DOM+selector readiness in discovery
 
   **What to do**:
   - In `src/vsco/discovery.ts`, remove `waitForLoadState('networkidle')`.
@@ -151,7 +151,7 @@ Wave 2 (after Wave 1)
     Evidence: .sisyphus/evidence/fix-timeouts-discovery-no-networkidle.txt
   ```
 
-- [ ] 3. Add failure artifact capture to `<backupRoot>/.vsco-backup/logs/`
+- [x] 3. Add failure artifact capture to `<backupRoot>/.vsco-backup/logs/`
 
   **What to do**:
   - Add a utility (e.g., `src/utils/artifacts.ts`) to:

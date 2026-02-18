@@ -50,7 +50,11 @@ export async function orchestrateBackup(username: string, outRoot: string, optio
   const runId = recordBackupRunStart(manifest);
 
   try {
-    const discovery = await discoverProfile(username, { navigationTimeout: options?.timeoutMs });
+    const discovery = await discoverProfile(username, {
+      navigationTimeout: options?.timeoutMs,
+      backupRoot,
+      runId
+    });
     if (discovery.errorMessage) {
       throw new Error(discovery.errorMessage);
     }
