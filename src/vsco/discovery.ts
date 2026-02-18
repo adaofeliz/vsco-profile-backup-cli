@@ -269,7 +269,7 @@ async function waitForPageReady(page: Page, timeout: number, logger: any): Promi
   ];
 
   try {
-    logger.verbose('Waiting for page readiness (DOM + selectors)...');
+    logger.debug('Waiting for page readiness (DOM + selectors)...');
     
     await page.locator(allSelectors.join(', ')).first().waitFor({
       state: 'visible',
@@ -277,16 +277,16 @@ async function waitForPageReady(page: Page, timeout: number, logger: any): Promi
     });
 
     if (await page.locator(contentSelectors.join(', ')).first().isVisible({ timeout: 1000 })) {
-      logger.verbose('Page ready: content detected');
+      logger.debug('Page ready: content detected');
     } else if (await page.locator(privateSelectors.join(', ')).first().isVisible({ timeout: 1000 })) {
-      logger.verbose('Page ready: private/suspended state detected');
+      logger.debug('Page ready: private/suspended state detected');
     } else if (await page.locator(notFoundSelectors.join(', ')).first().isVisible({ timeout: 1000 })) {
-      logger.verbose('Page ready: not found state detected');
+      logger.debug('Page ready: not found state detected');
     } else {
-      logger.verbose('Page ready: empty state detected');
+      logger.debug('Page ready: empty state detected');
     }
   } catch (error) {
-    logger.verbose('Timeout waiting for page readiness selectors, proceeding anyway');
+    logger.debug('Timeout waiting for page readiness selectors, proceeding anyway');
   }
 }
 
