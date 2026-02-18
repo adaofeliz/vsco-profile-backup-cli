@@ -52,7 +52,7 @@ export async function scrapeGalleries(username: string): Promise<Gallery[]> {
 
     // Navigate to profile galleries page
     const profileUrl = `https://vsco.co/${username}/gallery`;
-    await page.goto(profileUrl, { waitUntil: 'networkidle' });
+    await page.goto(profileUrl, { waitUntil: 'load' });
 
     // Extract gallery data
     const rawGalleries = await extractGalleryData(page);
@@ -173,7 +173,7 @@ async function extractGalleryData(page: Page): Promise<RawGalleryData[]> {
   // For each gallery, navigate and extract photo IDs
   for (const gallery of galleries) {
     try {
-      await page.goto(gallery.url, { waitUntil: 'networkidle' });
+      await page.goto(gallery.url, { waitUntil: 'load' });
       await page.waitForTimeout(1500);
 
       // Extract photo IDs from gallery page

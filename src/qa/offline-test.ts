@@ -107,7 +107,7 @@ export class OfflineVerification {
       this.logger.info(`Loading ${pageName}: ${fileUrl}`);
 
       // Navigate to page
-      await page.goto(fileUrl, { waitUntil: 'networkidle', timeout: 10000 });
+      await page.goto(fileUrl, { waitUntil: 'load', timeout: 10000 });
 
       // Wait a moment for any lazy-loaded images
       await page.waitForTimeout(1000);

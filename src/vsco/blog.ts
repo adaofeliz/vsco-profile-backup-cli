@@ -18,7 +18,7 @@ export async function scrapeBlogPosts(page: Page, username: string): Promise<Blo
   const blogUrl = `https://vsco.co/${username}/journal`;
   
   try {
-    await page.goto(blogUrl, { waitUntil: 'networkidle', timeout: 30000 });
+    await page.goto(blogUrl, { waitUntil: 'load', timeout: 30000 });
   } catch (error) {
     console.warn(`No blog/journal found for user ${username}`);
     return [];
@@ -89,7 +89,7 @@ export async function scrapeBlogPosts(page: Page, username: string): Promise<Blo
     }
 
     try {
-      await page.goto(postData.url, { waitUntil: 'networkidle', timeout: 30000 });
+      await page.goto(postData.url, { waitUntil: 'load', timeout: 30000 });
 
       await page.waitForSelector('article, .journal-post, [role="article"]', { 
         timeout: 10000 
