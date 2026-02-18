@@ -29,6 +29,9 @@ export {
   isValidSlug,
 } from './paths.js';
 
+export { fetchRobotsTxt, isCrawlAllowed, checkRobotsPolicy } from './robots.js';
+export type { RobotsCheckResult } from './robots.js';
+
 export async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }

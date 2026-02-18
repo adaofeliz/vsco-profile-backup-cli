@@ -94,6 +94,13 @@ export interface BackupRun {
   status: 'success' | 'partial' | 'failed';
   /** Optional error message if status is 'failed' or 'partial' */
   error_message?: string;
+  /** Robots.txt policy decision for this run */
+  robots_policy?: {
+    allowed: boolean;
+    reason: string;
+    fetch_success: boolean;
+    ignored: boolean;
+  };
 }
 
 /**
@@ -222,6 +229,15 @@ export function isValidBackupRun(value: unknown): value is BackupRun {
   const obj = value as Record<string, unknown>;
   const validStatuses = ['success', 'partial', 'failed'];
 
+  const robotsPolicyValid =
+    obj.robots_policy === undefined ||
+    (typeof obj.robots_policy === 'object' &&
+      obj.robots_policy !== null &&
+      typeof (obj.robots_policy as Record<string, unknown>).allowed === 'boolean' &&
+      typeof (obj.robots_policy as Record<string, unknown>).reason === 'string' &&
+      typeof (obj.robots_policy as Record<string, unknown>).fetch_success === 'boolean' &&
+      typeof (obj.robots_policy as Record<string, unknown>).ignored === 'boolean');
+
   return (
     typeof obj.run_id === 'string' &&
     typeof obj.ts === 'string' &&
@@ -230,6 +246,7 @@ export function isValidBackupRun(value: unknown): value is BackupRun {
     typeof obj.invalid_content_count === 'number' &&
     Array.isArray(obj.downloaded_items) &&
     validStatuses.includes(obj.status as string) &&
-    (obj.error_message === undefined || typeof obj.error_message === 'string')
+    (obj.error_message === undefined || typeof obj.error_message === 'string') &&
+    robotsPolicyValid
   );
 }

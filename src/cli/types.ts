@@ -5,6 +5,7 @@
 export interface CliOptions {
   outRoot: string;
   verbose: boolean;
+  ignoreRobots: boolean;
 }
 
 export interface CliResult {

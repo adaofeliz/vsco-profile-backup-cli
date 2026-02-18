@@ -38,6 +38,7 @@ function run(): void {
     .argument('<profileUrl>', 'VSCO profile URL (e.g., https://vsco.co/username)')
     .option('--out-root <dir>', 'Output root directory', '.')
     .option('--verbose', 'Enable verbose logging')
+    .option('--ignore-robots', 'Bypass robots.txt restrictions (use responsibly)')
     .action((profileUrl: string, options: CliOptions) => {
       try {
         const { username, normalized } = parseAndValidateUrl(profileUrl);
