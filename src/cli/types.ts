@@ -8,6 +8,7 @@ export interface CliOptions {
   ignoreRobots: boolean;
   maxScrolls?: number;
   maxItems?: number;
+  timeoutMs?: number;
 }
 
 export interface CliResult {

@@ -35,7 +35,11 @@ function mapBlogPost(post: DiscoveryBlogPost): ManifestBlogPost {
   };
 }
 
-export async function orchestrateBackup(username: string, outRoot: string): Promise<void> {
+export interface BackupOptions {
+  timeoutMs?: number;
+}
+
+export async function orchestrateBackup(username: string, outRoot: string, options?: BackupOptions): Promise<void> {
   const logger = getLogger();
   const backupRoot = join(outRoot, username);
   const profileUrl = `https://vsco.co/${username}`;
@@ -46,7 +50,7 @@ export async function orchestrateBackup(username: string, outRoot: string): Prom
   const runId = recordBackupRunStart(manifest);
 
   try {
-    const discovery = await discoverProfile(username);
+    const discovery = await discoverProfile(username, { navigationTimeout: options?.timeoutMs });
     if (discovery.errorMessage) {
       throw new Error(discovery.errorMessage);
     }

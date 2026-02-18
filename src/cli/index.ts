@@ -30,6 +30,32 @@ function parseAndValidateUrl(urlString: string): { username: string; normalized:
   }
 }
 
+function parseAndValidateTimeout(value: string): number {
+  const parsed = parseInt(value, 10);
+  
+  if (isNaN(parsed)) {
+    throw new Error(`--timeout-ms must be a number, got: ${value}`);
+  }
+  
+  if (!Number.isInteger(parsed)) {
+    throw new Error(`--timeout-ms must be an integer, got: ${value}`);
+  }
+  
+  const MIN_TIMEOUT = 1;
+  const MAX_TIMEOUT = 300000; // 300 seconds
+  
+  if (parsed < MIN_TIMEOUT) {
+    throw new Error(`--timeout-ms must be at least ${MIN_TIMEOUT}ms, got: ${parsed}`);
+  }
+  
+  if (parsed > MAX_TIMEOUT) {
+    console.warn(`Warning: --timeout-ms ${parsed}ms exceeds maximum of ${MAX_TIMEOUT}ms, capping to ${MAX_TIMEOUT}ms`);
+    return MAX_TIMEOUT;
+  }
+  
+  return parsed;
+}
+
 function run(): void {
   const program = new Command();
 
@@ -43,6 +69,7 @@ function run(): void {
     .option('--ignore-robots', 'Bypass robots.txt restrictions (use responsibly)')
     .option('--max-scrolls <number>', 'Maximum scroll cycles (default: 50)', parseInt)
     .option('--max-items <number>', 'Maximum items to discover (default: no limit)', parseInt)
+    .option('--timeout-ms <number>', 'Navigation and selector timeout in milliseconds (default: 90000, max: 300000)', (value: string) => parseAndValidateTimeout(value))
     .action(async (profileUrl: string, options: CliOptions) => {
       try {
         const { username, normalized } = parseAndValidateUrl(profileUrl);
@@ -61,16 +88,19 @@ function run(): void {
           console.log(`  Username: ${result.username}`);
           console.log(`  Profile URL: ${result.profileUrlNormalized}`);
           console.log(`  Backup root: ${result.backupRoot}`);
+          if (options.timeoutMs) {
+            console.log(`  Timeout: ${options.timeoutMs}ms`);
+          }
         }
 
-        await orchestrateBackup(username, options.outRoot);
+        await orchestrateBackup(username, options.outRoot, { timeoutMs: options.timeoutMs });
 
         process.exit(0);
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         console.error(`Error: ${message}`);
-        console.error(`\nUsage: vsco-backup <profileUrl> [--out-root <dir>] [--verbose]`);
-        console.error(`Example: vsco-backup "https://vsco.co/foo" --out-root /tmp/vsco`);
+        console.error(`\nUsage: vsco-backup <profileUrl> [--out-root <dir>] [--verbose] [--timeout-ms <number>]`);
+        console.error(`Example: vsco-backup "https://vsco.co/foo" --out-root /tmp/vsco --timeout-ms 120000`);
         process.exit(1);
       }
     });

@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "1.0.0",
+  "profile": {
+    "username": "test",
+    "profile_url": "https://vsco.co/test",
+    "last_backup_ts": "2026-02-18T06:03:43.326Z",
+    "backup_version": "1.0.0"
+  },
+  "content": {
+    "photos": [],
+    "galleries": [],
+    "blog_posts": []
+  },
+  "backup_runs": [
+    {
+      "run_id": "1771394623326-31c7f4fa",
+      "ts": "2026-02-18T06:03:43.326Z",
+      "new_content_count": 0,
+      "missing_content_count": 0,
+      "invalid_content_count": 0,
+      "downloaded_items": [],
+      "status": "failed",
+      "error_message": "Failed after 3 attempts: page.goto: Target page, context or browser has been closed"
+    }
+  ]
+}
