@@ -54,7 +54,7 @@ function run(): void {
           backupRoot,
         };
 
-        const logger = getLogger({ verbose: options.verbose });
+        getLogger({ verbose: options.verbose });
 
         if (options.verbose) {
           console.log('Parsed CLI arguments:');

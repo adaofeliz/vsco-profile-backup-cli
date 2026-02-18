@@ -5,11 +5,35 @@ import { loadManifest, saveManifestAtomic, recordBackupRunStart, recordBackupRun
 import { detectIncrementalPhotos } from './incremental.js';
 import { downloadAssets } from '../download/downloader.js';
 import { generateSite } from '../site/index.js';
+import type { Photo as ManifestPhoto, Gallery as ManifestGallery, BlogPost as ManifestBlogPost } from '../manifest/types.js';
+import type { Photo as DiscoveryPhoto, Gallery as DiscoveryGallery, BlogPost as DiscoveryBlogPost } from '../vsco/types.js';
 
-/**
- * Core orchestration module
- * High-level coordination of backup workflow
- */
+function mapPhoto(photo: DiscoveryPhoto): ManifestPhoto {
+  return {
+    id: photo.id,
+    url_highres: photo.imageUrl || '',
+    caption: photo.caption,
+    downloaded_at: new Date().toISOString()
+  };
+}
+
+function mapGallery(gallery: DiscoveryGallery): ManifestGallery {
+  return {
+    id: gallery.id,
+    name: gallery.name || 'Untitled Gallery',
+    photo_ids: []
+  };
+}
+
+function mapBlogPost(post: DiscoveryBlogPost): ManifestBlogPost {
+  return {
+    id: post.id,
+    slug: post.id,
+    title: post.title || 'Untitled Post',
+    content_html: post.excerpt || '',
+    published_at: post.publishDate || new Date().toISOString()
+  };
+}
 
 export async function orchestrateBackup(username: string, outRoot: string): Promise<void> {
   const logger = getLogger();
@@ -27,25 +51,26 @@ export async function orchestrateBackup(username: string, outRoot: string): Prom
       throw new Error(discovery.errorMessage);
     }
 
-    const incremental = await detectIncrementalPhotos(backupRoot, discovery.photos, manifest);
+    const manifestPhotos = discovery.photos.map(mapPhoto);
+    const incremental = await detectIncrementalPhotos(backupRoot, manifestPhotos, manifest);
     
     const itemsToDownload = [...incremental.newItems, ...incremental.missingItems, ...incremental.invalidItems];
     
     const downloadTasks = itemsToDownload.map(photo => ({
-      url: photo.imageUrl,
+      url: photo.url_highres,
       backupRoot,
       mediaId: photo.id,
       contentType: 'image/jpeg'
     }));
 
-    const { results, stats } = await downloadAssets(downloadTasks);
+    const { results } = await downloadAssets(downloadTasks);
 
     for (const photo of incremental.newItems) {
       manifest.content.photos.push(photo);
     }
     
-    manifest.content.galleries = discovery.galleries;
-    manifest.content.blog_posts = discovery.blogPosts;
+    manifest.content.galleries = discovery.galleries.map(mapGallery);
+    manifest.content.blog_posts = discovery.blogPosts.map(mapBlogPost);
 
     recordBackupRunFinish(manifest, runId, {
       new_content_count: incremental.newItems.length,
@@ -59,7 +84,6 @@ export async function orchestrateBackup(username: string, outRoot: string): Prom
     await generateSite(backupRoot);
 
     logger.info(`Backup completed successfully for ${username}`);
-
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     logger.error(`Backup failed: ${message}`);
