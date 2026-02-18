@@ -440,7 +440,7 @@ Wave 4 — Robustness + end-to-end QA hardening
     Evidence: .sisyphus/evidence/task-7-backoff.txt
   ```
 
-- [ ] 8. Robots.txt fetch + policy enforcement
+- [x] 8. Robots.txt fetch + policy enforcement
 
   **What to do**:
   - On run start, fetch `https://vsco.co/robots.txt`.
@@ -476,7 +476,7 @@ Wave 4 — Robustness + end-to-end QA hardening
     Evidence: .sisyphus/evidence/task-8-robots-stop.txt
   ```
 
-- [ ] 9. VSCO profile discovery: extract canonical identifiers and entry URLs
+- [x] 9. VSCO profile discovery: extract canonical identifiers and entry URLs
 
   **What to do**:
   - Implement Playwright navigation to profile URL.
@@ -528,7 +528,7 @@ Wave 4 — Robustness + end-to-end QA hardening
     Evidence: .sisyphus/evidence/task-9-private-error.txt
   ```
 
-- [ ] 10. Photos scraper: enumerate photo items + highest-res candidate URLs
+- [x] 10. Photos scraper: enumerate photo items + highest-res candidate URLs
 
   **What to do**:
   - From discovery, enumerate photo items with stable IDs.
@@ -558,7 +558,7 @@ Wave 4 — Robustness + end-to-end QA hardening
     Evidence: .sisyphus/evidence/task-10-srcset-select.txt
   ```
 
-- [ ] 11. Galleries scraper: enumerate galleries + membership
+- [x] 11. Galleries scraper: enumerate galleries + membership
 
   **What to do**:
   - Discover galleries with stable IDs and names.
@@ -589,7 +589,7 @@ Wave 4 — Robustness + end-to-end QA hardening
     Evidence: .sisyphus/evidence/task-11-galleries.json
   ```
 
-- [ ] 12. Blog posts scraper: enumerate posts + content extraction
+- [x] 12. Blog posts scraper: enumerate posts + content extraction
 
   **What to do**:
   - Discover blog posts with stable IDs and slugs.
@@ -623,7 +623,7 @@ Wave 4 — Robustness + end-to-end QA hardening
     Evidence: .sisyphus/evidence/task-12-blog.json
   ```
 
-- [ ] 13. Downloader: fetch binary assets with validation + re-download invalid
+- [x] 13. Downloader: fetch binary assets with validation + re-download invalid
 
   **What to do**:
   - Implement download pipeline to `.vsco-backup/media/`.
@@ -665,7 +665,7 @@ Wave 4 — Robustness + end-to-end QA hardening
     Evidence: .sisyphus/evidence/task-13-retry.txt
   ```
 
-- [ ] 14. Static site templates (minimal) + asset pipeline
+- [x] 14. Static site templates (minimal) + asset pipeline
 
   **What to do**:
   - Create minimal HTML templates for:
