@@ -37,3 +37,44 @@
 ### Next Steps
 - T4 will implement manifest IO (load/save/atomic operations)
 - Type guards will be used in manifest validation during load
+
+## Task 5: Output Layout & Slug/File Naming Policy
+
+### Key Learnings
+
+1. **Slug Generation Strategy**
+   - Unicode normalization (NFKD) is essential for handling accented characters
+   - Collision handling uses hash suffix (6-char SHA256) for determinism
+   - Idempotent: same ID always produces same slug
+   - Fallback to numeric suffix only if hash collision occurs (extremely rare)
+
+2. **Deterministic Naming**
+   - Media filenames use stable VSCO ID or hash of canonical URL
+   - Content-type mapping ensures correct extensions (jpg, mp4, webp, etc.)
+   - All naming is deterministic and stable across runs
+
+3. **Path Layout**
+   - Canonical structure: `.vsco-backup/manifest.json`, `.vsco-backup/media/`, `assets/`, `galleries/`, `blog/`
+   - Path utilities provide consistent access to all output locations
+   - Relative links work for offline browsing
+
+4. **Validation**
+   - Filename validation prevents path traversal attacks
+   - Slug validation ensures safe characters only (a-z, 0-9, hyphen)
+   - Length constraints respect filesystem limits (255 char max)
+
+### Implementation Notes
+
+- Used Node.js built-in `crypto.createHash()` for deterministic hashing
+- NFKD normalization handles Unicode properly (e.g., "Café" → "cafe")
+- Map-based collision tracking ensures O(1) lookup for existing slugs
+- All functions are pure and testable
+
+### Testing
+
+- Slug collision: Two items with same name produce distinct, stable slugs
+- Idempotency: Same ID always produces same slug
+- Unicode: Accented characters properly normalized
+- Validation: Path traversal and unsafe characters rejected
+- Media filenames: Stable across runs, proper extensions
+

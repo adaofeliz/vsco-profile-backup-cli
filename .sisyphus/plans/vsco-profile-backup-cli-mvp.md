@@ -239,7 +239,7 @@ Wave 4 — Robustness + end-to-end QA hardening
     Evidence: .sisyphus/evidence/task-2-invalid-url.txt
   ```
 
-- [ ] 3. Manifest schema (versioned) + types
+- [x] 3. Manifest schema (versioned) + types
 
   **What to do**:
   - Define a versioned manifest schema with `schemaVersion`.
@@ -278,7 +278,7 @@ Wave 4 — Robustness + end-to-end QA hardening
     Evidence: .sisyphus/evidence/task-3-manifest-roundtrip.txt
   ```
 
-- [ ] 4. Manifest IO: init/load/atomic save + run recording
+- [x] 4. Manifest IO: init/load/atomic save + run recording
 
   **What to do**:
   - Implement:
@@ -324,7 +324,7 @@ Wave 4 — Robustness + end-to-end QA hardening
     Evidence: .sisyphus/evidence/task-4-atomic-save.txt
   ```
 
-- [ ] 5. Output layout + slug/file naming policy (collision-proof)
+- [x] 5. Output layout + slug/file naming policy (collision-proof)
 
   **What to do**:
   - Define canonical output layout:
@@ -366,7 +366,7 @@ Wave 4 — Robustness + end-to-end QA hardening
     Evidence: .sisyphus/evidence/task-5-slug-collision.txt
   ```
 
-- [ ] 6. Logging + progress reporting utility
+- [x] 6. Logging + progress reporting utility
 
   **What to do**:
   - Implement a logger with levels: info (default), debug (verbose).
@@ -402,7 +402,7 @@ Wave 4 — Robustness + end-to-end QA hardening
     Evidence: .sisyphus/evidence/task-6-verbose-diff.txt
   ```
 
-- [ ] 7. Rate limiting + retry policy helper (conservative defaults)
+- [x] 7. Rate limiting + retry policy helper (conservative defaults)
 
   **What to do**:
   - Implement:
