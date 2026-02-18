@@ -11,6 +11,24 @@ export type { RetryOptions, RetryError } from './retry.js';
 export { rateLimit, createRateLimitedFn } from './ratelimit.js';
 export type { RateLimitOptions } from './ratelimit.js';
 
+export {
+  OUTPUT_LAYOUT,
+  getManifestPath,
+  getMediaDir,
+  getMediaPath,
+  getAssetsDir,
+  getGalleriesDir,
+  getGalleryPath,
+  getBlogDir,
+  getBlogPath,
+  getIndexPath,
+  normalizeSlug,
+  generateSlug,
+  generateMediaFilename,
+  isValidFilename,
+  isValidSlug,
+} from './paths.js';
+
 export async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
