@@ -7,13 +7,17 @@
  * - Uses retry wrapper for transient failures
  */
 
-import { stat, mkdir, writeFile } from 'fs/promises';
+import { stat, mkdir, rename, unlink } from 'fs/promises';
+import { createWriteStream } from 'fs';
 import { dirname } from 'path';
+import { pipeline } from 'stream/promises';
 import { getLogger } from '../utils/logger.js';
 import { retry } from '../utils/retry.js';
 import { rateLimit } from '../utils/ratelimit.js';
 import { getMediaPath, generateMediaFilename } from '../utils/paths.js';
 import { normalizeRemoteUrl } from '../utils/url.js';
+import { DEFAULT_USER_AGENT } from '../vsco/discovery.js';
+import { isCloudflareBlocked } from '../utils/cloudflare-block.js';
 
 export interface DownloadTask {
   /** URL to download */
@@ -131,15 +135,37 @@ async function downloadFile(task: DownloadTask): Promise<DownloadResult> {
     `Downloading ${filename} from ${normalizedUrl} (reason: ${validation.reason})`
   );
 
+  // Ensure directory exists before attempting download
+  await mkdir(dirname(localPath), { recursive: true });
+
+  const tmpPath = `${localPath}.tmp`;
+  let tmpFileCreated = false;
+
   try {
     // Download with retry wrapper
-    const fileBuffer = await retry(async () => {
-      const response = await fetch(normalizedUrl);
+    await retry(async () => {
+      const response = await fetch(normalizedUrl, {
+        headers: {
+          'User-Agent': DEFAULT_USER_AGENT,
+          'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+          'Referer': 'https://vsco.co/',
+        },
+        redirect: 'follow', // Follow 3xx redirects to final destination
+      });
 
       if (!response.ok) {
         const error = new Error(`HTTP ${response.status}: ${response.statusText}`) as any;
         error.status = response.status;
         throw error;
+      }
+
+      // Detect content-type mismatch (200 + text/html = potential block page)
+      const contentType = response.headers.get('content-type') || '';
+      if (contentType.toLowerCase().includes('text/html')) {
+        // Check if this is a Cloudflare block page
+        if (await isCloudflareBlocked(response)) {
+          throw new Error('Cloudflare block detected (HTML response)');
+        }
       }
 
       // Validate Content-Length if provided
@@ -153,24 +179,30 @@ async function downloadFile(task: DownloadTask): Promise<DownloadResult> {
         }
       }
 
-      // Read response as buffer
-      const arrayBuffer = await response.arrayBuffer();
-      return Buffer.from(arrayBuffer);
+      // Stream response to disk using .tmp file
+      if (!response.body) {
+        throw new Error('Response body is empty');
+      }
+
+      const writeStream = createWriteStream(tmpPath);
+      tmpFileCreated = true;
+
+      // Use pipeline for proper error handling and backpressure
+      await pipeline(response.body as any, writeStream);
     });
 
-    // Validate downloaded size
-    if (fileBuffer.length === 0) {
+    // Validate downloaded file size
+    const tmpStats = await stat(tmpPath);
+    if (tmpStats.size === 0) {
       throw new Error('Downloaded file is empty (0 bytes)');
     }
 
-    // Ensure directory exists
-    await mkdir(dirname(localPath), { recursive: true });
-
-    // Write file to disk
-    await writeFile(localPath, fileBuffer);
+    // Atomic rename: move .tmp to final path
+    await rename(tmpPath, localPath);
+    tmpFileCreated = false; // Successfully renamed, no cleanup needed
 
     logger.debug(
-      `Successfully downloaded ${filename} (${fileBuffer.length} bytes)`
+      `Successfully downloaded ${filename} (${tmpStats.size} bytes)`
     );
 
     return {
@@ -178,12 +210,21 @@ async function downloadFile(task: DownloadTask): Promise<DownloadResult> {
       success: true,
       localPath,
       downloaded: true,
-      sizeBytes: fileBuffer.length,
+      sizeBytes: tmpStats.size,
     };
   } catch (error) {
     const errorMsg =
       error instanceof Error ? error.message : String(error);
     logger.error(`Failed to download ${filename}: ${errorMsg}`);
+
+    // Cleanup: remove .tmp file if it was created
+    if (tmpFileCreated) {
+      try {
+        await unlink(tmpPath);
+      } catch (cleanupError) {
+        // Ignore cleanup errors
+      }
+    }
 
     return {
       task,
