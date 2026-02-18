@@ -18,9 +18,10 @@ export async function discoverProfile(
   options?: DiscoveryOptions
 ): Promise<ProfileDiscoveryResult> {
   const logger = getLogger();
-  const opts: Required<DiscoveryOptions> = {
+  const opts = {
     noNewContentThreshold: options?.noNewContentThreshold ?? 3,
     maxScrollCycles: options?.maxScrollCycles ?? 50,
+    maxItems: options?.maxItems,
     navigationTimeout: options?.navigationTimeout ?? 30000,
     headless: options?.headless ?? true,
     userAgent: options?.userAgent ?? DEFAULT_USER_AGENT,
@@ -98,7 +99,8 @@ export async function discoverProfile(
     logger.debug('Starting scroll discovery loop');
     while (
       scrollState.currentCycle < opts.maxScrollCycles &&
-      scrollState.cyclesWithoutNewContent < opts.noNewContentThreshold
+      scrollState.cyclesWithoutNewContent < opts.noNewContentThreshold &&
+      (opts.maxItems === undefined || scrollState.totalIds.size < opts.maxItems)
     ) {
       scrollState.currentCycle++;
 
@@ -124,13 +126,15 @@ export async function discoverProfile(
       }
     }
 
-    if (scrollState.currentCycle >= opts.maxScrollCycles) {
-      logger.debug(`Reached max scroll cycles: ${opts.maxScrollCycles}`);
+    let stoppingReason = '';
+    if (opts.maxItems !== undefined && scrollState.totalIds.size >= opts.maxItems) {
+      stoppingReason = `Reached max items limit: ${opts.maxItems}`;
+    } else if (scrollState.currentCycle >= opts.maxScrollCycles) {
+      stoppingReason = `Reached max scroll cycles: ${opts.maxScrollCycles}`;
     } else {
-      logger.debug(
-        `Stopping: no new content for ${opts.noNewContentThreshold} cycles`
-      );
+      stoppingReason = `No new content for ${opts.noNewContentThreshold} consecutive cycles`;
     }
+    logger.debug(`Stopping reason: ${stoppingReason}`);
 
     const photos = await extractPhotos(page, networkData);
     const galleries = await extractGalleries(page);

@@ -6,6 +6,8 @@ export interface CliOptions {
   outRoot: string;
   verbose: boolean;
   ignoreRobots: boolean;
+  maxScrolls?: number;
+  maxItems?: number;
 }
 
 export interface CliResult {

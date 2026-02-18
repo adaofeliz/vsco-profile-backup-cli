@@ -67,6 +67,13 @@ export interface DiscoveryOptions {
   maxScrollCycles?: number;
 
   /**
+   * Maximum number of items to discover (hard cap)
+   * If set, discovery stops when totalIds reaches this count
+   * @default undefined (no limit)
+   */
+  maxItems?: number;
+
+  /**
    * Timeout for page navigation (ms)
    * @default 30000
    */

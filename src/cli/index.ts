@@ -1,6 +1,7 @@
 import { Command } from 'commander';
 import { join } from 'path';
 import type { CliOptions, CliResult } from './types.js';
+import { orchestrateBackup } from '../core/index.js';
 
 function parseAndValidateUrl(urlString: string): { username: string; normalized: string } {
   try {
@@ -39,7 +40,9 @@ function run(): void {
     .option('--out-root <dir>', 'Output root directory', '.')
     .option('--verbose', 'Enable verbose logging')
     .option('--ignore-robots', 'Bypass robots.txt restrictions (use responsibly)')
-    .action((profileUrl: string, options: CliOptions) => {
+    .option('--max-scrolls <number>', 'Maximum scroll cycles (default: 50)', parseInt)
+    .option('--max-items <number>', 'Maximum items to discover (default: no limit)', parseInt)
+    .action(async (profileUrl: string, options: CliOptions) => {
       try {
         const { username, normalized } = parseAndValidateUrl(profileUrl);
         const backupRoot = join(options.outRoot, username);
@@ -55,10 +58,9 @@ function run(): void {
           console.log(`  Username: ${result.username}`);
           console.log(`  Profile URL: ${result.profileUrlNormalized}`);
           console.log(`  Backup root: ${result.backupRoot}`);
-        } else {
-          console.log(`Username: ${result.username}`);
-          console.log(`Backup root: ${result.backupRoot}`);
         }
+
+        await orchestrateBackup(username, options.outRoot);
 
         process.exit(0);
       } catch (err) {
