@@ -11,7 +11,7 @@ import {
   BackupRun,
   SCHEMA_VERSION,
   isValidBackupManifest,
-} from './types';
+} from './types.js';
 
 const MANIFEST_DIR = '.vsco-backup';
 const MANIFEST_FILENAME = 'manifest.json';

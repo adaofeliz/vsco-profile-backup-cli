@@ -16,7 +16,7 @@ export {
   isValidGallery,
   isValidBlogPost,
   isValidBackupRun,
-} from './types';
+} from './types.js';
 
 export {
   ensureBackupRoot,
@@ -25,4 +25,4 @@ export {
   recordBackupRunStart,
   recordBackupRunFinish,
   getManifestPath,
-} from './io';
+} from './io.js';
