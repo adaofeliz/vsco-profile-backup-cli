@@ -134,7 +134,7 @@ Wave 4 — Robustness + end-to-end QA hardening
 
 ## TODOs
 
-- [ ] 1. Repository scaffold + build/run scripts
+- [x] 1. Repository scaffold + build/run scripts
 
   **What to do**:
   - Initialize Node.js + TypeScript CLI project structure (`src/`, `dist/`).
