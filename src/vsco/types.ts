@@ -90,6 +90,16 @@ export interface DiscoveryOptions {
    * @default Chrome user agent
    */
   userAgent?: string;
+
+  /**
+   * Root directory for backup (for artifact capture)
+   */
+  backupRoot?: string;
+
+  /**
+   * Run ID for artifact naming
+   */
+  runId?: string;
 }
 
 /**

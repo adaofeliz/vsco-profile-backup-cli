@@ -1,6 +1,7 @@
 import { chromium, Browser, Page, Response } from 'playwright';
 import { getLogger } from '../utils/logger.js';
 import { retry } from '../utils/retry.js';
+import { captureArtifacts } from '../utils/artifacts.js';
 import {
   ProfileDiscoveryResult,
   DiscoveryOptions,
@@ -44,7 +45,10 @@ export async function discoverProfile(
 
     logger.debug(`Navigating to: ${profileUrl}`);
     const response = await retry(
-      () => page.goto(profileUrl, { timeout: opts.navigationTimeout }),
+      () => page.goto(profileUrl, { 
+        timeout: opts.navigationTimeout,
+        waitUntil: 'domcontentloaded'
+      }),
       { maxAttempts: 3 }
     );
 
@@ -72,7 +76,8 @@ export async function discoverProfile(
       throw new Error(`HTTP ${status}: Failed to load profile`);
     }
 
-    await page.waitForLoadState('networkidle', { timeout: opts.navigationTimeout });
+    // Wait for DOM readiness via selectors instead of networkidle
+    await waitForPageReady(page, opts.navigationTimeout, logger);
 
     const isPrivateOrSuspended = await checkIfPrivateOrSuspended(page);
     if (isPrivateOrSuspended) {
@@ -162,6 +167,24 @@ export async function discoverProfile(
     const errorMessage = error instanceof Error ? error.message : String(error);
     logger.error(`Profile discovery failed: ${errorMessage}`);
 
+    if (browser && options?.backupRoot && options?.runId) {
+      try {
+        const artifacts = await captureArtifacts(
+          (await browser.contexts())[0]?.pages()[0],
+          options.backupRoot,
+          'discovery',
+          options.runId
+        );
+        if (artifacts) {
+          logger.info(`Artifacts captured: ${artifacts.screenshotPath}`);
+          logger.info(`Artifacts captured: ${artifacts.htmlPath}`);
+        }
+      } catch (captureError) {
+        const captureMsg = captureError instanceof Error ? captureError.message : String(captureError);
+        logger.warn(`Failed to capture artifacts: ${captureMsg}`);
+      }
+    }
+
     if (browser) {
       await browser.close();
     }
@@ -209,6 +232,62 @@ async function setupNetworkInterception(page: Page): Promise<NetworkData> {
   });
 
   return networkData;
+}
+
+async function waitForPageReady(page: Page, timeout: number, logger: any): Promise<void> {
+  const contentSelectors = [
+    '[data-id]',
+    '[data-image-id]',
+    'a[href*="/media/"]',
+  ];
+
+  const privateSelectors = [
+    'text=private profile',
+    'text=This profile is private',
+    'text=account suspended',
+    'text=Account Suspended',
+    '[data-test="private-profile"]',
+    '[aria-label*="private"]',
+  ];
+
+  const notFoundSelectors = [
+    'text=not found',
+    'text=Page not found',
+    'text=404',
+  ];
+
+  const emptySelectors = [
+    'text=No images yet',
+    'text=No content',
+  ];
+
+  const allSelectors = [
+    ...contentSelectors,
+    ...privateSelectors,
+    ...notFoundSelectors,
+    ...emptySelectors,
+  ];
+
+  try {
+    logger.verbose('Waiting for page readiness (DOM + selectors)...');
+    
+    await page.locator(allSelectors.join(', ')).first().waitFor({
+      state: 'visible',
+      timeout,
+    });
+
+    if (await page.locator(contentSelectors.join(', ')).first().isVisible({ timeout: 1000 })) {
+      logger.verbose('Page ready: content detected');
+    } else if (await page.locator(privateSelectors.join(', ')).first().isVisible({ timeout: 1000 })) {
+      logger.verbose('Page ready: private/suspended state detected');
+    } else if (await page.locator(notFoundSelectors.join(', ')).first().isVisible({ timeout: 1000 })) {
+      logger.verbose('Page ready: not found state detected');
+    } else {
+      logger.verbose('Page ready: empty state detected');
+    }
+  } catch (error) {
+    logger.verbose('Timeout waiting for page readiness selectors, proceeding anyway');
+  }
 }
 
 async function checkIfPrivateOrSuspended(page: Page): Promise<boolean> {
