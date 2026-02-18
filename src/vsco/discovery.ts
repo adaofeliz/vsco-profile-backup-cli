@@ -1,4 +1,4 @@
-import { chromium, Browser, Page, Response } from 'playwright';
+import { chromium, Browser, BrowserContext, Page, Response } from 'playwright';
 import { getLogger } from '../utils/logger.js';
 import { retry } from '../utils/retry.js';
 import { captureArtifacts } from '../utils/artifacts.js';
@@ -34,19 +34,33 @@ export async function discoverProfile(
 
   const profileUrl = `https://vsco.co/${username}/gallery`;
   let browser: Browser | null = null;
+  let context: BrowserContext | null = null;
+  let page: Page | null = null;
+  const externalPage = options?.page;
+  const ownsBrowser = !externalPage;
 
   try {
-    browser = await chromium.launch({ headless: opts.headless });
-    const context = await browser.newContext({
-      userAgent: opts.userAgent,
-    });
-    const page = await context.newPage();
+    if (externalPage) {
+      page = externalPage;
+    } else {
+      browser = await chromium.launch({ headless: opts.headless });
+      context = await browser.newContext({
+        userAgent: opts.userAgent,
+      });
+      page = await context.newPage();
+    }
 
-    const networkData = await setupNetworkInterception(page);
+    if (!page) {
+      throw new Error('Failed to initialize Playwright page');
+    }
+
+    const activePage = page;
+
+    const networkData = await setupNetworkInterception(activePage);
 
     logger.debug(`Navigating to: ${profileUrl}`);
     const response = await retry(
-      () => page.goto(profileUrl, { 
+      () => activePage.goto(profileUrl, { 
         timeout: opts.navigationTimeout,
         waitUntil: 'domcontentloaded'
       }),
@@ -78,9 +92,9 @@ export async function discoverProfile(
     }
 
     // Wait for DOM readiness via selectors instead of networkidle
-    await waitForPageReady(page, opts.navigationTimeout, logger);
+    await waitForPageReady(activePage, opts.navigationTimeout, logger);
 
-    const isPrivateOrSuspended = await checkIfPrivateOrSuspended(page);
+    const isPrivateOrSuspended = await checkIfPrivateOrSuspended(activePage);
     if (isPrivateOrSuspended) {
       logger.warn(`Profile is private or suspended: ${username}`);
       return {
@@ -110,10 +124,10 @@ export async function discoverProfile(
     ) {
       scrollState.currentCycle++;
 
-      await scrollToBottom(page);
-      await page.waitForTimeout(1500);
+      await scrollToBottom(activePage);
+      await activePage.waitForTimeout(1500);
 
-      const currentIds = await extractContentIds(page, networkData);
+      const currentIds = await extractContentIds(activePage, networkData);
       const previousIdCount = scrollState.lastIdCount;
       currentIds.forEach((id) => scrollState.totalIds.add(id));
       scrollState.lastIdCount = scrollState.totalIds.size;
@@ -142,9 +156,9 @@ export async function discoverProfile(
     }
     logger.debug(`Stopping reason: ${stoppingReason}`);
 
-    const photos = await extractPhotos(page, networkData);
-    const galleries = await extractGalleries(page);
-    const blogPosts = await extractBlogPosts(page);
+    const photos = await extractPhotos(activePage, networkData);
+    const galleries = await extractGalleries(activePage);
+    const blogPosts = await extractBlogPosts(activePage);
 
     logger.debug(
       `Discovery complete: ${photos.length} photos, ${galleries.length} galleries, ${blogPosts.length} blog posts`
@@ -152,8 +166,12 @@ export async function discoverProfile(
 
     const isEmpty = photos.length === 0 && galleries.length === 0 && blogPosts.length === 0;
 
-    await browser.close();
-    browser = null;
+    if (ownsBrowser && browser) {
+      await browser.close();
+      browser = null;
+      context = null;
+      page = null;
+    }
 
     return {
       username,
@@ -168,17 +186,21 @@ export async function discoverProfile(
     const errorMessage = error instanceof Error ? error.message : String(error);
     logger.error(`Profile discovery failed: ${errorMessage}`);
 
-    if (browser && options?.backupRoot && options?.runId) {
+    if (options?.backupRoot && options?.runId) {
       try {
-        const artifacts = await captureArtifacts(
-          (await browser.contexts())[0]?.pages()[0],
-          options.backupRoot,
-          'discovery',
-          options.runId
-        );
-        if (artifacts) {
-          logger.info(`Artifacts captured: ${artifacts.screenshotPath}`);
-          logger.info(`Artifacts captured: ${artifacts.htmlPath}`);
+        const capturePage =
+          options?.page ?? page ?? (browser ? (await browser.contexts())[0]?.pages()[0] : undefined);
+        if (capturePage) {
+          const artifacts = await captureArtifacts(
+            capturePage,
+            options.backupRoot,
+            'discovery',
+            options.runId
+          );
+          if (artifacts) {
+            logger.info(`Artifacts captured: ${artifacts.screenshotPath}`);
+            logger.info(`Artifacts captured: ${artifacts.htmlPath}`);
+          }
         }
       } catch (captureError) {
         const captureMsg = captureError instanceof Error ? captureError.message : String(captureError);
@@ -186,7 +208,7 @@ export async function discoverProfile(
       }
     }
 
-    if (browser) {
+    if (ownsBrowser && browser) {
       await browser.close();
     }
 

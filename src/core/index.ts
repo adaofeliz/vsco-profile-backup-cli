@@ -3,6 +3,7 @@ import { getLogger } from '../utils/logger.js';
 import { discoverProfile } from '../vsco/index.js';
 import { loadManifest, saveManifestAtomic, recordBackupRunStart, recordBackupRunFinish } from '../manifest/io.js';
 import { detectIncrementalPhotos } from './incremental.js';
+import { createVscoSession } from './session.js';
 import { downloadAssets } from '../download/downloader.js';
 import { generateSite } from '../site/index.js';
 import { normalizeRemoteUrl } from '../utils/url.js';
@@ -55,6 +56,7 @@ export async function orchestrateBackup(username: string, outRoot: string, optio
   const logger = getLogger();
   const backupRoot = join(outRoot, username);
   const profileUrl = `https://vsco.co/${username}`;
+  let session: Awaited<ReturnType<typeof createVscoSession>> | null = null;
 
   logger.info(`Starting backup for ${username}`);
   
@@ -62,11 +64,15 @@ export async function orchestrateBackup(username: string, outRoot: string, optio
   const runId = recordBackupRunStart(manifest);
 
   try {
+    session = await createVscoSession({
+      headless: options?.headless,
+    });
     const discovery = await discoverProfile(username, {
       navigationTimeout: options?.timeoutMs,
       maxScrollCycles: options?.maxScrollCycles,
       maxItems: options?.maxItems,
       headless: options?.headless,
+      page: session.page,
       backupRoot,
       runId
     });
@@ -120,5 +126,14 @@ export async function orchestrateBackup(username: string, outRoot: string, optio
     }, 'failed', message);
     await saveManifestAtomic(backupRoot, manifest);
     throw error;
+  } finally {
+    if (session) {
+      try {
+        await session.close();
+      } catch (closeError) {
+        const closeMessage = closeError instanceof Error ? closeError.message : String(closeError);
+        logger.warn(`Failed to close Playwright session: ${closeMessage}`);
+      }
+    }
   }
 }

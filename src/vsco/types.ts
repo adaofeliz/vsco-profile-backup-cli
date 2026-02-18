@@ -1,3 +1,5 @@
+import type { Page } from 'playwright';
+
 /**
  * VSCO profile discovery and content types
  */
@@ -100,6 +102,8 @@ export interface DiscoveryOptions {
    * Run ID for artifact naming
    */
   runId?: string;
+
+  page?: Page;
 }
 
 /**
